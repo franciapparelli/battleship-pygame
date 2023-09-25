@@ -11,7 +11,7 @@ BLACK = (0, 0, 0)
 LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
 
 FPS = 60
-CREW_IMG = pygame.image.load("images/x.png")
+CREW_IMG = pygame.image.load("images/crew2.png")
 rect = CREW_IMG.get_rect()
 rect.center = 1280 // 2, 720 // 2
 
@@ -58,6 +58,8 @@ def visualize_grid(matrix):
             x += GRID_NODE_WIDTH  # for ever item/number in that row we move one "step" to the right
         y += GRID_NODE_HEIGHT  # for every new row we move one "step" downwards
 
+
+
 def main():
     pygame.init()
     clock = pygame.time.Clock()
@@ -82,7 +84,7 @@ def main():
                 first_node_x = first_pos_x // GRID_NODE_WIDTH - 1
                 first_node_y = first_pos_y // GRID_NODE_HEIGHT - 2
                 second_node_x = second_pos_x // GRID_NODE_WIDTH - 2
-                second_node_y = second_pos_y // GRID_NODE_HEIGHT - 2
+                second_node_y = second_pos_y // GRID_NODE_HEIGHT -2
             elif event.type == pygame.MOUSEMOTION and moving and ships_placing_phase:
                 rect.move_ip(event.rel)
                 first_pos_x, first_pos_y = rect.topleft
@@ -91,8 +93,8 @@ def main():
                 first_node_y = first_pos_y // GRID_NODE_HEIGHT - 2
                 second_node_x = second_pos_x // GRID_NODE_WIDTH - 2
                 second_node_y = second_pos_y // GRID_NODE_HEIGHT - 2
-                for row in range(8):
-                    for item in range(8):
+                for row in range(9):
+                    for item in range(9):
                         if (
                             first_node_x <= 8
                             and first_node_x >= 0
