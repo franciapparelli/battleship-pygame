@@ -2,8 +2,6 @@ import random
 import os
 import pygame
 
-crew_member = pygame.image.load(os.path.join("images", "crew_member.png"))
-
 # Funcion para inicilizar matrices que luego seran modificadas para mostrar por consola
 def inicializar_matriz():
     matriz = [
