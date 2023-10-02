@@ -52,10 +52,12 @@ def visualize_grid(matrix):
                 create_crew(x, y, (255, 255, 255))
             elif item == "H":
                 create_crew(x, y, (0, 255, 0))
+            elif item == "F":
+                create_crew(x, y, (255, 0, 0))
             else:
                 create_crew(x, y, (0, 0, 0))
 
-            x += GRID_NODE_WIDTH  # for ever item/number in that row we move one "step" to the right
+            x += GRID_NODE_WIDTH  # for every item/number in that row we move one "step" to the right
         y += GRID_NODE_HEIGHT  # for every new row we move one "step" downwards
 
 
@@ -79,8 +81,8 @@ def main():
                         moving = True
             elif event.type == pygame.MOUSEBUTTONUP and ships_placing_phase:
                 moving = False
-                first_pos_x, first_pos_y = rect.topleft
-                second_pos_x, second_pos_y = rect.bottomright
+                first_pos_x, first_pos_y = rect.midleft
+                second_pos_x, second_pos_y = rect.midright
                 first_node_x = first_pos_x // GRID_NODE_WIDTH - 1
                 first_node_y = first_pos_y // GRID_NODE_HEIGHT - 2
                 second_node_x = second_pos_x // GRID_NODE_WIDTH - 2
@@ -95,22 +97,15 @@ def main():
                 second_node_y = second_pos_y // GRID_NODE_HEIGHT - 2
                 for row in range(9):
                     for item in range(9):
-                        if (
-                            first_node_x <= 8
-                            and first_node_x >= 0
-                            and first_node_y <= 8
-                            and first_node_y >= 0
-                            and second_node_x <= 8
-                            and second_node_x >= 0
-                            and second_node_y <= 8
-                            and second_node_y >= 0
-                        ):
-                            if (row == first_node_y and item == first_node_x) or (
-                                row == second_node_y and item == second_node_x
+                        if (row == first_node_y and item == first_node_x) or (
+                            row == second_node_y and item == second_node_x
                             ):
+                            if first_node_x <= 8 and first_node_x >= 0 and first_node_y <= 8 and first_node_y >= 0 and first_node_x == second_node_x or first_node_y == second_node_y:
                                 matrix[row][item] = "H"
                             else:
-                                matrix[row][item] = "-"
+                                matrix[row][item] = "F"
+                        else:
+                            matrix[row][item] = "-"
             elif event.type == pygame.MOUSEBUTTONDOWN and atacking_phase:
                 if event.button == 1:  # 1 representa el clic izquierdo del mouse
                     # Obtener la posición del clic del mouse
