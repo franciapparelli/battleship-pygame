@@ -2,7 +2,7 @@ import pygame
 from sys import exit
 from funciones import *
 
-WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = 1600, 900
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Naval Battle")
 
@@ -58,6 +58,59 @@ def visualize_grid(matrix):
             x += GRID_NODE_WIDTH  # for every item/number in that row we move one "step" to the right
         y += GRID_NODE_HEIGHT  # for every new row we move one "step" downwards
 
+def validate_ship_placement(matrix):
+    # Define the ship sizes and their counts
+    ship_sizes = {'Aircraft Carrier': 5, 'Battleship': 4, 'Cruiser': 3, 'Submarine': 3, 'Destroyer': 2}
+    ship_counts = {ship: 0 for ship in ship_sizes}
+
+    # Iterate through the matrix to validate ship placement
+    for row in range(9):
+        for col in range(9):
+            cell = matrix[row][col]
+
+            # If the cell contains a ship, check its placement
+            if cell == "H":
+                # Check horizontally for consecutive ships
+                if col + 1 < 9 and matrix[row][col + 1] == "H":
+                    return False  # Two ships are adjacent horizontally
+                # Check vertically for consecutive ships
+                if row + 1 < 9 and matrix[row + 1][col] == "H":
+                    return False  # Two ships are adjacent vertically
+
+                # Determine the ship's size
+                ship_size = 1
+                if col + 1 < 9 and matrix[row][col + 1] == "H":
+                    # If the ship continues horizontally, calculate its size
+                    for i in range(col + 1, 9):
+                        if matrix[row][i] == "H":
+                            ship_size += 1
+                        else:
+                            break
+
+                elif row + 1 < 9 and matrix[row + 1][col] == "H":
+                    # If the ship continues vertically, calculate its size
+                    for i in range(row + 1, 9):
+                        if matrix[i][col] == "H":
+                            ship_size += 1
+                        else:
+                            break
+
+                # Check if the ship size matches a valid ship size
+                if ship_size not in ship_sizes.values():
+                    return False  # Invalid ship size
+
+                # Increment the count of the corresponding ship
+                for ship, size in ship_sizes.items():
+                    if size == ship_size:
+                        ship_counts[ship] += 1
+
+    # Check if the correct number of each ship is placed
+    for ship, count in ship_counts.items():
+        if count != 1:  # In a standard game, there should be one of each type of ship
+            return False
+
+    # All checks passed, ship placement is valid
+    return True
 
 
 def main():
@@ -68,6 +121,7 @@ def main():
     moving = False
     ships_placing_phase = True
     attacking_phase = False
+
     while running:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -80,8 +134,10 @@ def main():
                     if rect.collidepoint(event.pos):
                         moving = True
                     if rect_start.collidepoint(event.pos):
-                        ships_placing_phase = False
-                        attacking_phase = True
+                        if validate_ship_placement(matrix):
+                            ships_placing_phase = False 
+                            attacking_phase = True
+                            
             elif event.type == pygame.MOUSEBUTTONUP and ships_placing_phase:
                 moving = False
                 first_pos_x, first_pos_y = rect.midleft
@@ -103,7 +159,7 @@ def main():
                         if (row == first_node_y and item == first_node_x) or (
                             row == second_node_y and item == second_node_x
                             ):
-                            if first_node_x <= 8 and first_node_x >= 0 and first_node_y <= 8 and first_node_y >= 0 and first_node_x == second_node_x or first_node_y == second_node_y:
+                            if first_node_x <= 8 and first_node_x >= 0 and first_node_y <= 8 and first_node_y >= 0 and first_node_x == second_node_x or first_node_y == second_node_y and second_node_x - first_node_x == 1:
                                 matrix[row][item] = "H"
                             else:
                                 matrix[row][item] = "F"
