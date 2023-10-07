@@ -1,6 +1,5 @@
 import random
-import os
-import pygame
+import random
 
 # Funcion para inicilizar matrices que luego seran modificadas para mostrar por consola
 def inicializar_matriz():
@@ -29,20 +28,21 @@ def inicializar_matriz_computadora():
             m = n + 1
         else:
             m = n
-        
+
         while es_valido is False:
             posicion_barco = random.randint(0, 1) # 0 para vertical, 1 para horizontal
             fila = random.randint(0, 8 - m)
             columna = random.randint(0, 9 - m)
             es_valido = validar_barcos_computadora(posicion_barco, fila, columna, matriz, m)
-        
+
         if posicion_barco == 0:
             for i in range(m):
                  matriz[fila + i][columna] = "X"   
         else:
             for i in range(m): 
                 matriz[fila][columna + i] = "X" 
-        n -= 1           
+        n -= 1
+        es_valido = False           
     return matriz  
 
 # Funcion de validacion de los barcos de la computadora antes que se coloquen
@@ -93,6 +93,8 @@ def solicitar_barcos():
         barco1 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 1 (4 celdas):")
         barco1 = separar_coordenadas(barco1)
     print("Barcos colocados correctamente.")
+    print(mostrar_tablero(matriz_jugador))
+
 
     barco2 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 2 (3 celdas):")
     barco2 = separar_coordenadas(barco2)
@@ -100,7 +102,8 @@ def solicitar_barcos():
         print("Las coordenadas ingresadas no son válidas!!") 
         barco2 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 2 (3 celdas):")
         barco2 = separar_coordenadas(barco2)
-    
+    print("Barcos colocados correctamente.")
+    print(mostrar_tablero(matriz_jugador))
 
     barco3 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 3 (3 celdas):")
     barco3 = separar_coordenadas(barco3)
@@ -108,7 +111,8 @@ def solicitar_barcos():
         print("Las coordenadas ingresadas no son válidas!!") 
         barco3 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 3 (3 celdas):")
         barco3 = separar_coordenadas(barco3)
-    
+    print("Barcos colocados correctamente.")
+    print(mostrar_tablero(matriz_jugador))
 
     barco4 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 4 (2 celdas):")
     barco4 = separar_coordenadas(barco4)
@@ -116,7 +120,8 @@ def solicitar_barcos():
         print("Las coordenadas ingresadas no son válidas!!") 
         barco4 = input("Ingrese las coordenadas iniciales y finales para colocar su barco (Ejemplo: A1 A4) '\n' Barco 4 (2 celdas):")
         barco4 = separar_coordenadas(barco4)
-    
+    print("Barcos colocados correctamente.")
+    print(mostrar_tablero(matriz_jugador))
 
     return matriz_jugador
 
@@ -139,7 +144,7 @@ def colocar_barco(barco, matriz, n_barco):
                 if j not in filas_validas:
                     return None
             contador += 1
-    
+
     primer_coordenada = barco[0]
     ultima_coordenada = barco[1]
     columna_primer_coordenada = primer_coordenada[0]
@@ -193,7 +198,7 @@ def ataque_jugador(matriz_visible, matriz_computadora, contador):
 def ataque_computadora(matriz, contador_computadora):
     fila = random.randint (0 , 8)
     columna = random.randint (0 , 8)
-    
+
     while matriz [fila][columna] != "T" and matriz [fila][columna] != "O":
         fila = random.randint (0 , 8)
         columna = random.randint (0 , 8)
