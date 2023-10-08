@@ -11,12 +11,16 @@ BLACK = (0, 0, 0)
 LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
 
 FPS = 60
+
 CREW_IMG = pygame.image.load("images/crew2.png")
 rect = CREW_IMG.get_rect()
 rect.center = WIDTH // 2, HEIGHT // 2
+
 START_BUTTON = pygame.image.load("images/start.png")
 rect_start = START_BUTTON.get_rect()
 rect_start.center = WIDTH // 2, HEIGHT // 1.3
+
+BULLET = pygame.image.load("images/bullet.png")
 
 # we use the sizes to draw as well as to do our "steps" in the loops.
 GRID_NODE_WIDTH = WIDTH // 25
@@ -54,6 +58,8 @@ def visualize_grid_player(matrix):
                 create_crew(x, y, (0, 255, 0))
             elif item == "F":
                 create_crew(x, y, (255, 0, 0))
+            elif item == "O":
+                SCREEN.blit(START_BUTTON, (x, y))
             else:
                 create_crew(x, y, (0, 0, 0))
 
@@ -71,7 +77,9 @@ def visualize_grid_computer(matrix):
         x += GRID_NODE_WIDTH
     counter = 0
     for row in matrix:
-        x = WIDTH // 16 - 25 + WIDTH // 2 # for every row we start at the left of the screen again
+        x = (
+            WIDTH // 16 - 25 + WIDTH // 2
+        )  # for every row we start at the left of the screen again
         label = myfont.render(str(counter), 1, BLACK)
         counter += 1
         SCREEN.blit(label, (x, y))
@@ -79,15 +87,21 @@ def visualize_grid_computer(matrix):
         for item in row:
             if item == "-":
                 create_crew(x, y, (255, 255, 255))
-            elif item == "H":
-                create_crew(x, y, (0, 255, 0))
-            elif item == "F":
+            elif item == "T":
                 create_crew(x, y, (255, 0, 0))
+            elif item == "F":
+                create_crew(x, y, (255, 255, 255))
+                SCREEN.blit(BULLET, (x + GRID_NODE_WIDTH / 5, y + GRID_NODE_HEIGHT / 5))
+            elif item == "O":
+                create_crew(x, y, (255, 255, 255))
+                SCREEN.blit(BULLET, (x + GRID_NODE_WIDTH / 5, y + GRID_NODE_HEIGHT / 5))
             else:
-                create_crew(x, y, (0, 0, 0))
+                create_crew(x, y, (255, 255, 255))
+                SCREEN.blit(BULLET, (x + GRID_NODE_WIDTH / 5, y + GRID_NODE_HEIGHT / 5))
 
             x += GRID_NODE_WIDTH  # for every item/number in that row we move one "step" to the right
         y += GRID_NODE_HEIGHT  # for every new row we move one "step" downwards
+
 
 """
 def validate_ship_placement(matrix):
@@ -146,10 +160,25 @@ def validate_ship_placement(matrix):
 """
 
 
+def computer_attacking(matrix, computer_counter):
+    row = random.randint(0, 8)
+    column = random.randint(0, 8)
+
+    while matrix[row][column] != "T" and matrix[row][column] != "O":
+        row = random.randint(0, 8)
+        column = random.randint(0, 8)
+        if matrix[row][column] == "X":
+            matrix[row][column] = "T"
+            computer_counter += 1
+        else:
+            matrix[row][column] = "O"
+        print(mostrar_tablero(matrix))
+    return computer_counter
+
+
 def main():
     pygame.init()
     clock = pygame.time.Clock()
-    running = True
     player_matrix = inicializar_matriz()
     computer_matrix = inicializar_matriz_computadora()
     visible_computer_matrix = inicializar_matriz()
@@ -157,7 +186,9 @@ def main():
     ships_placing_phase = True
     attacking_phase = False
 
-    while running:
+    player_counter = 0
+    computer_counter = 0
+    while player_counter < 12 and computer_counter < 12:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -173,7 +204,7 @@ def main():
                         #     ships_placing_phase = False
                         ships_placing_phase = False
                         attacking_phase = True
-                        START_BUTTON.fill((255,255,255,0))
+                        START_BUTTON.fill((255, 255, 255, 0))
 
             elif event.type == pygame.MOUSEBUTTONUP and ships_placing_phase:
                 moving = False
@@ -213,24 +244,30 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and attacking_phase:
                 player_attacking_phase = True
                 computer_attacking_phase = False
-                if event.button == 1:  # 1 representa el clic izquierdo del mouse
-                    # Obtener la posición del clic del mouse
-                    x, y = pygame.mouse.get_pos()
+                if player_attacking_phase:
+                    if event.button == 1:  # 1 representa el clic izquierdo del mouse
+                        # Obtener la posición del clic del mouse
+                        x, y = pygame.mouse.get_pos()
 
-                    # Calcular la celda en la que se hizo clic  
-                    column_click = (x - (WIDTH // 16 + WIDTH // 2)) // GRID_NODE_WIDTH
-                    row_click = (y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
-                    if (
-                        row_click <= 8
-                        and row_click >= 0
-                        and column_click <= 8
-                        and column_click >= 0
-                    ):
-                        if player_attacking_phase:
-                            if computer_matrix[row_click][column_click] == "X":
+                        # Calcular la celda en la que se hizo clic
+                        column_click = (
+                            x - (WIDTH // 16 + WIDTH // 2)
+                        ) // GRID_NODE_WIDTH
+                        row_click = (y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
+                        if (
+                            row_click <= 8
+                            and row_click >= 0
+                            and column_click <= 8
+                            and column_click >= 0
+                        ):
+                            if computer_matrix[row_click][column_click] == "X" :
+                                computer_matrix[row_click][column_click] = "T"
                                 visible_computer_matrix[row_click][column_click] = "T"
-                        else:
-                            computer_matrix[row_click][column_click] = "T"
+                                player_counter += 1
+                            else:
+                                visible_computer_matrix[row_click][column_click] = "O"
+                else:
+                    x = 1
 
         draw_window()
         visualize_grid_player(player_matrix)
@@ -239,7 +276,8 @@ def main():
         SCREEN.blit(START_BUTTON, rect_start)
         pygame.draw.rect(SCREEN, BLACK, rect, 2)
         pygame.display.update()
-
+    SCREEN.fill(LIGHT_BLUE)
+    SCREEN.blit(START_BUTTON, (WIDTH // 2, HEIGHT // 2))
 
 if __name__ == "__main__":
     main()
