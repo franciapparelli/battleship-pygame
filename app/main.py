@@ -59,7 +59,10 @@ def visualize_grid_player(matrix):
             elif item == "F":
                 create_crew(x, y, (255, 0, 0))
             elif item == "O":
-                SCREEN.blit(START_BUTTON, (x, y))
+                create_crew(x, y, (255, 255, 255))
+                SCREEN.blit(BULLET, (x + GRID_NODE_WIDTH / 5, y + GRID_NODE_HEIGHT / 5))
+            elif item == "T":
+                create_crew(x, y, (0, 255, 0))
             else:
                 create_crew(x, y, (0, 0, 0))
 
@@ -101,7 +104,6 @@ def visualize_grid_computer(matrix):
 
             x += GRID_NODE_WIDTH  # for every item/number in that row we move one "step" to the right
         y += GRID_NODE_HEIGHT  # for every new row we move one "step" downwards
-
 
 """
 def validate_ship_placement(matrix):
@@ -172,8 +174,7 @@ def computer_attacking(matrix, computer_counter):
             computer_counter += 1
         else:
             matrix[row][column] = "O"
-        print(mostrar_tablero(matrix))
-    return computer_counter
+    return matrix, computer_counter
 
 
 def main():
@@ -185,7 +186,8 @@ def main():
     moving = False
     ships_placing_phase = True
     attacking_phase = False
-
+    player_attacking_phase = True
+    computer_attacking_phase = False
     player_counter = 0
     computer_counter = 0
     while player_counter < 12 and computer_counter < 12:
@@ -242,8 +244,6 @@ def main():
                         else:
                             player_matrix[row][item] = "-"
             elif event.type == pygame.MOUSEBUTTONDOWN and attacking_phase:
-                player_attacking_phase = True
-                computer_attacking_phase = False
                 if player_attacking_phase:
                     if event.button == 1:  # 1 representa el clic izquierdo del mouse
                         # Obtener la posición del clic del mouse
@@ -260,14 +260,16 @@ def main():
                             and column_click <= 8
                             and column_click >= 0
                         ):
-                            if computer_matrix[row_click][column_click] == "X" :
+                            if computer_matrix[row_click][column_click] == "X":
                                 computer_matrix[row_click][column_click] = "T"
                                 visible_computer_matrix[row_click][column_click] = "T"
                                 player_counter += 1
-                            else:
+                            elif computer_matrix[row_click][column_click] != "T":
                                 visible_computer_matrix[row_click][column_click] = "O"
-                else:
-                    x = 1
+                            player_attacking_phase = False
+                            if player_counter < 12:
+                                player_matrix, computer_counter = computer_attacking(player_matrix, computer_counter)
+                                player_attacking_phase = True
 
         draw_window()
         visualize_grid_player(player_matrix)
