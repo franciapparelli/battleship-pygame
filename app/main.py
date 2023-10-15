@@ -12,8 +12,8 @@ LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
 
 FPS = 60
 
-CREW_IMG = pygame.image.load("images/crew2.png")
-rect = CREW_IMG.get_rect()
+crew_img = pygame.image.load("images/crew2.png")
+rect = crew_img.get_rect()
 rect.center = WIDTH // 2, HEIGHT // 2
 
 START_BUTTON = pygame.image.load("images/start.png")
@@ -180,10 +180,32 @@ def computer_attacking(matrix, computer_counter):
 def main():
     pygame.init()
     clock = pygame.time.Clock()
+
+    # Crew Boats Load
+    crew2_img = pygame.image.load("images/crew2.png")
+    rect2 = crew2_img.get_rect()
+    rect2.center = WIDTH // 9, HEIGHT // 1.2
+
+    crew3_img = pygame.image.load("images/crew3.png")
+    rect3 = crew3_img.get_rect()
+    rect3.center = WIDTH // 3, HEIGHT // 1.2  
+
+    crew3D_img = pygame.image.load("images/crew3.png") # Second Boat of size 3
+    rect3D = crew3D_img.get_rect()
+    rect3D.center = WIDTH // 9, HEIGHT // 1.1 
+
+    crew4_img = pygame.image.load("images/crew4.png")
+    rect4 = crew4_img.get_rect()
+    rect4.center = WIDTH // 3, HEIGHT // 1.1
+
     player_matrix = inicializar_matriz()
     computer_matrix = inicializar_matriz_computadora()
     visible_computer_matrix = inicializar_matriz()
     moving = False
+    moving2 = False
+    moving3 = False
+    moving3D = False
+    moving4 = False
     ships_placing_phase = True
     attacking_phase = False
     player_attacking_phase = True
@@ -199,17 +221,55 @@ def main():
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and ships_placing_phase:
                 if event.button == 1:  # 1 representa el clic izquierdo del mouse
-                    if rect.collidepoint(event.pos):
+                    if rect2.collidepoint(event.pos):
                         moving = True
+                        moving2 = True
+                    if rect3.collidepoint(event.pos):
+                        moving = True
+                        moving3 = True
+                    if rect3D.collidepoint(event.pos):
+                        moving = True
+                        moving3D = True
+                    if rect4.collidepoint(event.pos):
+                        moving = True
+                        moving4 = True
                     if rect_start.collidepoint(event.pos):
                         # if validate_ship_placement(player_matrix):
                         #     ships_placing_phase = False
                         ships_placing_phase = False
                         attacking_phase = True
                         START_BUTTON.fill((255, 255, 255, 0))
-
+                if event.button == 3:
+                    if rect2.collidepoint(event.pos):
+                        crew2_img = pygame.transform.rotate(crew2_img, 90)
+                        rect2 = crew2_img.get_rect()
+                        rect2.center = rect2.centerx, rect2.centery
+                        rect2.move_ip(pygame.mouse.get_pos())
+                    if rect3.collidepoint(event.pos):
+                        crew3_img = pygame.transform.rotate(crew3_img, 90)
+                        rect3 = crew3_img.get_rect()
+                        rect3.center = rect3.centerx, rect3.centery
+                        rect3.move_ip(pygame.mouse.get_pos())
+                    if rect3D.collidepoint(event.pos):
+                        crew3D_img = pygame.transform.rotate(crew3D_img, 90)
+                        rect3D = crew3D_img.get_rect()
+                        rect3D.center = rect3D.centerx, rect3D.centery
+                        rect3D.move_ip(pygame.mouse.get_pos())
+                    if rect4.collidepoint(event.pos):
+                        crew4_img = pygame.transform.rotate(crew4_img, 90)
+                        rect4 = crew4_img.get_rect()
+                        rect4.center = rect4.centerx, rect4.centery
+                        rect4.move_ip(pygame.mouse.get_pos())
             elif event.type == pygame.MOUSEBUTTONUP and ships_placing_phase:
                 moving = False
+                if moving2:
+                    moving2 = False
+                elif moving3:
+                    moving3 = False
+                elif moving3D:
+                    moving3D = False
+                elif moving4:
+                    moving4 = False
                 first_pos_x, first_pos_y = rect.midleft
                 second_pos_x, second_pos_y = rect.midright
                 first_node_x = (first_pos_x - (WIDTH // 16)) // GRID_NODE_WIDTH
@@ -217,9 +277,22 @@ def main():
                 second_node_x = (second_pos_x - (WIDTH // 16)) // GRID_NODE_WIDTH
                 second_node_y = (second_pos_y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
             elif event.type == pygame.MOUSEMOTION and moving and ships_placing_phase:
-                rect.move_ip(event.rel)
-                first_pos_x, first_pos_y = rect.topleft
-                second_pos_x, second_pos_y = rect.bottomright
+                if moving2:
+                    rect2.move_ip(event.rel)
+                    first_pos_x, first_pos_y = rect2.topleft
+                    second_pos_x, second_pos_y = rect2.bottomright
+                elif moving3:
+                    rect3.move_ip(event.rel)
+                    first_pos_x, first_pos_y = rect3.topleft
+                    second_pos_x, second_pos_y = rect3.bottomright
+                elif moving3D:
+                    rect3D.move_ip(event.rel)
+                    first_pos_x, first_pos_y = rect3D.topleft
+                    second_pos_x, second_pos_y = rect3D.bottomright
+                elif moving4:
+                    rect4.move_ip(event.rel)
+                    first_pos_x, first_pos_y = rect4.topleft
+                    second_pos_x, second_pos_y = rect4.bottomright
                 first_node_x = (first_pos_x - (WIDTH // 16)) // GRID_NODE_WIDTH
                 first_node_y = (first_pos_y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
                 second_node_x = (second_pos_x - (WIDTH // 16)) // GRID_NODE_WIDTH
@@ -236,11 +309,39 @@ def main():
                                 and first_node_y >= 0
                                 and first_node_x == second_node_x
                                 or first_node_y == second_node_y
-                                and second_node_x - first_node_x == 1
                             ):
-                                player_matrix[row][item] = "H"
-                            else:
-                                player_matrix[row][item] = "F"
+                                if moving2:        
+                                    if second_node_x - first_node_x == 1 or second_node_y - first_node_y == 1:
+                                        player_matrix[row][item] = "H"
+                                    else:
+                                        player_matrix[row][item] = "F"
+                                elif moving3 or moving3D:        
+                                    if second_node_x - first_node_x == 2:
+                                        player_matrix[row][item] = "H"
+                                        if item != first_node_x: 
+                                            player_matrix[row][item - 1] = "H"
+                                    elif second_node_y - first_node_y == 2:
+                                        player_matrix[row][item] = "H"
+                                        if row != first_node_y:    
+                                            player_matrix[row - 1][item] = "H"
+                                    else:
+                                        if second_node_x - first_node_x == 3:
+                                            player_matrix[row][item] = "F" 
+                                            player_matrix[row][item - 1] = "F"
+                                        if second_node_y - first_node_y == 3:
+                                            player_matrix[row][item] = "F"    
+                                            player_matrix[row - 1][item] = "F"
+                                elif moving4:        
+                                    if second_node_x - first_node_x == 3:
+                                        player_matrix[row][item] = "H"
+                                        player_matrix[row][item + 1] = "H"
+                                        player_matrix[row][item + 2] = "H"
+                                    elif second_node_y - first_node_y == 3:
+                                        player_matrix[row][item] = "H"
+                                        player_matrix[row + 1][item] = "H"
+                                        player_matrix[row + 2][item] = "H"
+                                    else:
+                                        player_matrix[row][item] = "F"
                         else:
                             player_matrix[row][item] = "-"
             elif event.type == pygame.MOUSEBUTTONDOWN and attacking_phase:
@@ -274,9 +375,15 @@ def main():
         draw_window()
         visualize_grid_player(player_matrix)
         visualize_grid_computer(visible_computer_matrix)
-        SCREEN.blit(CREW_IMG, rect)
+        SCREEN.blit(crew2_img, rect2)
+        SCREEN.blit(crew3_img, rect3)
+        SCREEN.blit(crew3D_img, rect3D)
+        SCREEN.blit(crew4_img, rect4)
         SCREEN.blit(START_BUTTON, rect_start)
-        pygame.draw.rect(SCREEN, BLACK, rect, 2)
+        # pygame.draw.rect(SCREEN, BLACK, rect2, 2)
+        # pygame.draw.rect(SCREEN, BLACK, rect3, 2)
+        # pygame.draw.rect(SCREEN, BLACK, rect3D, 2)
+        # pygame.draw.rect(SCREEN, BLACK, rect4, 2)
         pygame.display.update()
     SCREEN.fill(LIGHT_BLUE)
     SCREEN.blit(START_BUTTON, (WIDTH // 2, HEIGHT // 2))
