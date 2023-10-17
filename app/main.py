@@ -1,6 +1,7 @@
 import pygame
 from sys import exit
 from funciones import *
+from collections import namedtuple
 
 WIDTH, HEIGHT = 1600, 900
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -166,15 +167,33 @@ def computer_attacking(matrix, computer_counter):
     row = random.randint(0, 8)
     column = random.randint(0, 8)
 
-    while matrix[row][column] != "T" and matrix[row][column] != "O":
+    while matrix[row][column] != "F" and matrix[row][column] != "O":
         row = random.randint(0, 8)
         column = random.randint(0, 8)
         if matrix[row][column] == "X":
-            matrix[row][column] = "T"
+            matrix[row][column] = "F"
             computer_counter += 1
         else:
             matrix[row][column] = "O"
     return matrix, computer_counter
+
+Message = namedtuple("Message", ["text", "position", "duration", "frames"])
+
+def create_message(text, position, duration):
+    return Message(text, position, duration, 0)
+
+def update_messages(messages):
+    return [msg._replace(frames=msg.frames + 1) for msg in messages]
+
+def remove_expired_messages(messages):
+    return [msg for msg in messages if msg.frames < msg.duration]
+
+def add_message(messages, message):
+    return messages + [message]
+
+def render_message(screen, message, font):
+    text_surface = font.render(message.text, True, (255, 255, 255))
+    screen.blit(text_surface, message.position)
 
 
 def main():
@@ -212,6 +231,7 @@ def main():
     computer_attacking_phase = False
     player_counter = 0
     computer_counter = 0
+    messages = []
     while player_counter < 12 and computer_counter < 12:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -332,20 +352,22 @@ def main():
                                             player_matrix[row][item] = "F"    
                                             player_matrix[row - 1][item] = "F"
                                 elif moving4:        
-                                    if second_node_x - first_node_x == 3:
+                                    if second_node_x - first_node_x == 3 and second_node_x < 9:
                                         player_matrix[row][item] = "H"
-                                        player_matrix[row][item + 1] = "H"
-                                        player_matrix[row][item + 2] = "H"
+                                        player_matrix[row][second_node_x - 1] = "H"
+                                        player_matrix[row][second_node_x - 2] = "H"
                                     elif second_node_y - first_node_y == 3:
                                         player_matrix[row][item] = "H"
-                                        player_matrix[row + 1][item] = "H"
-                                        player_matrix[row + 2][item] = "H"
+                                        player_matrix[second_node_y - 1][item] = "H"
+                                        player_matrix[second_node_y - 2][item] = "H"
                                     else:
                                         player_matrix[row][item] = "F"
                         else:
                             player_matrix[row][item] = "-"
             elif event.type == pygame.MOUSEBUTTONDOWN and attacking_phase:
                 if player_attacking_phase:
+                    message = create_message("Player 1's turn", (10, 10), 120)  # Display for 2 seconds (assuming 60 FPS)
+                    messages = add_message(messages, message)
                     if event.button == 1:  # 1 representa el clic izquierdo del mouse
                         # Obtener la posición del clic del mouse
                         x, y = pygame.mouse.get_pos()
@@ -384,6 +406,12 @@ def main():
         # pygame.draw.rect(SCREEN, BLACK, rect3, 2)
         # pygame.draw.rect(SCREEN, BLACK, rect3D, 2)
         # pygame.draw.rect(SCREEN, BLACK, rect4, 2)
+        myfont = pygame.font.SysFont("monospace", 30)
+        messages = update_messages(messages)
+        for message in messages:
+            render_message(SCREEN, message, myfont)
+
+            messages = remove_expired_messages(messages)
         pygame.display.update()
     SCREEN.fill(LIGHT_BLUE)
     SCREEN.blit(START_BUTTON, (WIDTH // 2, HEIGHT // 2))
