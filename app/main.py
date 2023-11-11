@@ -13,19 +13,28 @@ LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
 
 FPS = 60
 
-crew_img = pygame.image.load("crew2.png")
+crew_img = pygame.image.load("images/crew2.png")
 rect = crew_img.get_rect()
 rect.center = WIDTH // 2, HEIGHT // 2
 
-START_BUTTON = pygame.image.load("start.png")
+START_BUTTON = pygame.image.load("images/start.png")
 rect_start = START_BUTTON.get_rect()
 rect_start.center = WIDTH // 2, HEIGHT // 1.3
 
-BULLET = pygame.image.load("bullet.png")
+BULLET = pygame.image.load("images/bullet.png")
+
+pygame.mixer.pre_init(20000)
+pygame.mixer.init()
+HIT_SOUND = pygame.mixer.Sound("images/hit.wav")
+MISS_SOUND = pygame.mixer.Sound("images/miss.wav")
+WIN_SOUND = pygame.mixer.Sound("images/winning.wav")
 
 # we use the sizes to draw as well as to do our "steps" in the loops.
 GRID_NODE_WIDTH = WIDTH // 25
 GRID_NODE_HEIGHT = WIDTH // 25
+
+winner = None
+
 
 def draw_window():
     SCREEN.fill(LIGHT_BLUE)
@@ -113,9 +122,9 @@ def validate_ship_placement(matrix):
             if item == "B":
                 counter += 1
     if counter != 12:
-        print(counter)
         return False
     return True
+
 
 def computer_attacking(matrix, computer_counter):
     row = random.randint(0, 8)
@@ -127,30 +136,46 @@ def computer_attacking(matrix, computer_counter):
 
     if matrix[row][column] == "B":
         matrix[row][column] = "F"
+        pygame.mixer.Sound.play(HIT_SOUND)
         computer_counter += 1  # Increment the computer_counter
     else:
         matrix[row][column] = "O"
+        pygame.mixer.Sound.play(MISS_SOUND)
 
     return matrix, computer_counter  # Return the updated computer_counter
 
 
-Message = namedtuple("Message", ["text", "position", "duration", "frames"])
+Message = namedtuple("Message", ["text", "position", "frames"])
 
-def create_message(text, position, duration):
-    return Message(text, position, duration, 0)
+
+def create_message(text, position):
+    return Message(text, position, 0)
+
 
 def update_messages(messages):
     return [msg._replace(frames=msg.frames + 1) for msg in messages]
 
-def remove_expired_messages(messages):
-    return [msg for msg in messages if msg.frames < msg.duration]
 
 def add_message(messages, message):
     return messages + [message]
 
+
+def remove_message(messages, message):
+    return [msg for msg in messages if msg != message]
+
+
 def render_message(screen, message, font):
     text_surface = font.render(message.text, True, (255, 255, 255))
     screen.blit(text_surface, message.position)
+
+
+def display_winner(winner):
+    font = pygame.font.SysFont("monospace", 60)
+    text = font.render(f"{winner} wins!", True, (0, 0, 0))
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    pygame.draw.rect(SCREEN, (255, 255, 255), text_rect)
+    SCREEN.blit(text, text_rect)
+    pygame.display.update()
 
 
 def main():
@@ -158,19 +183,19 @@ def main():
     clock = pygame.time.Clock()
 
     # Crew Boats Load
-    crew2_img = pygame.image.load("crew2.png")
+    crew2_img = pygame.image.load("images/crew2.png")
     rect2 = crew2_img.get_rect()
     rect2.center = WIDTH // 9, HEIGHT // 1.2
 
-    crew3_img = pygame.image.load("crew3.png")
+    crew3_img = pygame.image.load("images/crew3.png")
     rect3 = crew3_img.get_rect()
     rect3.center = WIDTH // 3, HEIGHT // 1.2
 
-    crew3D_img = pygame.image.load("crew3.png") # Second Boat of size 3
+    crew3D_img = pygame.image.load("images/crew3.png")  # Second Boat of size 3
     rect3D = crew3D_img.get_rect()
     rect3D.center = WIDTH // 9, HEIGHT // 1.1
 
-    crew4_img = pygame.image.load("crew4.png")
+    crew4_img = pygame.image.load("images/crew4.png")
     rect4 = crew4_img.get_rect()
     rect4.center = WIDTH // 3, HEIGHT // 1.1
 
@@ -189,7 +214,12 @@ def main():
     player_counter = 0
     computer_counter = 0
     messages = []
-    while player_counter < 12 and computer_counter < 12:
+    running = True
+    winner = None
+    winner_display = False
+    counter1_message = None
+    counter2_message = None
+    while running:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -211,7 +241,6 @@ def main():
                         moving = True
                         moving4 = True
                     if rect_start.collidepoint(event.pos):
-                        print(player_matrix)
                         if validate_ship_placement(player_matrix):
                             ships_placing_phase = False
                             attacking_phase = True
@@ -255,7 +284,7 @@ def main():
                 second_node_y = (second_pos_y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
                 for row in range(9):
                     for item in range(9):
-                          if player_matrix[row][item] == "H":
+                        if player_matrix[row][item] == "H":
                             player_matrix[row][item] = "B"
 
             elif event.type == pygame.MOUSEMOTION and moving and ships_placing_phase:
@@ -293,7 +322,10 @@ def main():
                                 or first_node_y == second_node_y
                             ):
                                 if moving2:
-                                    if second_node_x - first_node_x == 1 or second_node_y - first_node_y == 1:
+                                    if (
+                                        second_node_x - first_node_x == 1
+                                        or second_node_y - first_node_y == 1
+                                    ):
                                         player_matrix[row][item] = "H"
                                     else:
                                         player_matrix[row][item] = "F"
@@ -314,50 +346,91 @@ def main():
                                             player_matrix[row][item] = "F"
                                             player_matrix[row - 1][item] = "F"
                                 elif moving4:
-                                    if second_node_x - first_node_x == 3 and second_node_x < 9:
+                                    if (
+                                    second_node_x - first_node_x == 3
+                                    and second_node_x < 9
+                                    and second_node_x - 2 >= 0
+                                        ):
                                         player_matrix[row][item] = "H"
                                         player_matrix[row][second_node_x - 1] = "H"
                                         player_matrix[row][second_node_x - 2] = "H"
-                                    elif second_node_y - first_node_y == 3:
+                                    elif (
+                                        second_node_y - first_node_y == 3
+                                    and second_node_y < 9
+                                    and second_node_y - 2 >= 0
+                                        ):
                                         player_matrix[row][item] = "H"
                                         player_matrix[second_node_y - 1][item] = "H"
                                         player_matrix[second_node_y - 2][item] = "H"
                                     else:
                                         player_matrix[row][item] = "F"
+                                else:
+                                    player_matrix[row][item] = "F"
                         else:
                             if player_matrix[row][item] != "B":
                                 player_matrix[row][item] = "-"
 
             elif event.type == pygame.MOUSEBUTTONDOWN and attacking_phase:
                 if player_attacking_phase:
-                    message = create_message("Player 1's turn", (10, 10), 120)  # Display for 2 seconds (assuming 60 FPS)
-                    messages = add_message(messages, message)
-                    if event.button == 1:  # 1 representa el clic izquierdo del mouse
-                        # Obtener la posición del clic del mouse
-                        x, y = pygame.mouse.get_pos()
+                    messages = remove_message(messages, counter1_message)
+                    messages = remove_message(messages, counter2_message)
+                    counter1_message = create_message(
+                        f"Player Counter: {player_counter}", (10, 10)
+                    )  # Display for 2 seconds (assuming 60 FPS)
+                    counter2_message = create_message(
+                        f"Computer Counter: {computer_counter}", (WIDTH - 350, 10)
+                    )  # Display for 2 seconds (assuming 60 FPS)
+                    messages = add_message(messages, counter1_message)
+                    messages = add_message(messages, counter2_message)
+                if event.button == 1:  # 1 representa el clic izquierdo del mouse
+                    # Obtener la posición del clic del mouse
+                    x, y = pygame.mouse.get_pos()
 
-                        # Calcular la celda en la que se hizo clic
-                        column_click = (
-                            x - (WIDTH // 16 + WIDTH // 2)
-                        ) // GRID_NODE_WIDTH
-                        row_click = (y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
-                        if (
-                            row_click <= 8
-                            and row_click >= 0
-                            and column_click <= 8
-                            and column_click >= 0
-                        ):
-                            if computer_matrix[row_click][column_click] == "X":
-                                computer_matrix[row_click][column_click] = "T"
-                                visible_computer_matrix[row_click][column_click] = "T"
-                                player_counter += 1
-                            elif computer_matrix[row_click][column_click] != "T":
-                                visible_computer_matrix[row_click][column_click] = "O"
-                            player_attacking_phase = False
-                            if player_counter < 12:
-                                player_matrix, computer_counter = computer_attacking(player_matrix, computer_counter)
-                                print(computer_counter)
+                    # Calcular la celda en la que se hizo clic
+                    column_click = (x - (WIDTH // 16 + WIDTH // 2)) // GRID_NODE_WIDTH
+                    row_click = (y - (HEIGHT // 8)) // GRID_NODE_HEIGHT
+                    if (
+                        row_click <= 8
+                        and row_click >= 0
+                        and column_click <= 8
+                        and column_click >= 0
+                    ):
+                        if computer_matrix[row_click][column_click] == "X":
+                            computer_matrix[row_click][column_click] = "T"
+                            visible_computer_matrix[row_click][column_click] = "T"
+                            pygame.mixer.Sound.play(HIT_SOUND)
+                            player_counter += 1
+                        elif computer_matrix[row_click][column_click] != "T":
+                            visible_computer_matrix[row_click][column_click] = "O"
+                            pygame.mixer.Sound.play(MISS_SOUND)
+                        player_attacking_phase = False
+                        if player_counter < 12:
+                            row = random.randint(0, 8)
+                            column = random.randint(0, 8)
+
+                            while player_matrix[row][column] == "F" or player_matrix[row][column] == "O":
+                                row = random.randint(0, 8)
+                                column = random.randint(0, 8)
+
+                            if player_matrix[row][column] == "B":
+                                player_matrix[row][column] = "F"
+                                pygame.mixer.Sound.play(HIT_SOUND)
+                                computer_counter += 1  # Increment the computer_counter
+                            else:
+                                player_matrix[row][column] = "O"
+                                pygame.mixer.Sound.play(MISS_SOUND)
                                 player_attacking_phase = True
+        if player_counter == 12:
+            winner = "Player"
+            display_winner(winner)
+            pygame.mixer.Sound.play(WIN_SOUND)
+            pygame.time.wait(900)
+            pygame.quit()
+        elif computer_counter == 12:
+            winner = "Computer"
+            display_winner(winner)
+            pygame.time.wait(3600)
+            pygame.quit()
 
         draw_window()
         visualize_grid_player(player_matrix)
@@ -367,19 +440,13 @@ def main():
         SCREEN.blit(crew3D_img, rect3D)
         SCREEN.blit(crew4_img, rect4)
         SCREEN.blit(START_BUTTON, rect_start)
-        # pygame.draw.rect(SCREEN, BLACK, rect2, 2)
-        # pygame.draw.rect(SCREEN, BLACK, rect3, 2)
-        # pygame.draw.rect(SCREEN, BLACK, rect3D, 2)
-        # pygame.draw.rect(SCREEN, BLACK, rect4, 2)
         myfont = pygame.font.SysFont("monospace", 30)
-        messages = update_messages(messages)
         for message in messages:
             render_message(SCREEN, message, myfont)
-
-            messages = remove_expired_messages(messages)
         pygame.display.update()
     SCREEN.fill(LIGHT_BLUE)
     SCREEN.blit(START_BUTTON, (WIDTH // 2, HEIGHT // 2))
+
 
 if __name__ == "__main__":
     main()
