@@ -347,18 +347,18 @@ def main():
                                             player_matrix[row - 1][item] = "F"
                                 elif moving4:
                                     if (
-                                    second_node_x - first_node_x == 3
-                                    and second_node_x < 9
-                                    and second_node_x - 2 >= 0
-                                        ):
+                                        second_node_x - first_node_x == 3
+                                        and second_node_x < 9
+                                        and second_node_x - 2 >= 0
+                                    ):
                                         player_matrix[row][item] = "H"
                                         player_matrix[row][second_node_x - 1] = "H"
                                         player_matrix[row][second_node_x - 2] = "H"
                                     elif (
                                         second_node_y - first_node_y == 3
-                                    and second_node_y < 9
-                                    and second_node_y - 2 >= 0
-                                        ):
+                                        and second_node_y < 9
+                                        and second_node_y - 2 >= 0
+                                    ):
                                         player_matrix[row][item] = "H"
                                         player_matrix[second_node_y - 1][item] = "H"
                                         player_matrix[second_node_y - 2][item] = "H"
@@ -408,7 +408,10 @@ def main():
                             row = random.randint(0, 8)
                             column = random.randint(0, 8)
 
-                            while player_matrix[row][column] == "F" or player_matrix[row][column] == "O":
+                            while (
+                                player_matrix[row][column] == "F"
+                                or player_matrix[row][column] == "O"
+                            ):
                                 row = random.randint(0, 8)
                                 column = random.randint(0, 8)
 
@@ -420,6 +423,8 @@ def main():
                                 player_matrix[row][column] = "O"
                                 pygame.mixer.Sound.play(MISS_SOUND)
                                 player_attacking_phase = True
+                        else:
+                            running = False
         if player_counter == 12:
             winner = "Player"
             display_winner(winner)
@@ -429,7 +434,7 @@ def main():
         elif computer_counter == 12:
             winner = "Computer"
             display_winner(winner)
-            pygame.time.wait(3600)
+            pygame.time.wait(5000)
             pygame.quit()
 
         draw_window()
